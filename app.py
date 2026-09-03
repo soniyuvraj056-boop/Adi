@@ -3,12 +3,6 @@ Adi — Your Personal Schedule & Reminder Website
 ------------------------------------------------
 Run locally with:  python app.py
 Then open:          http://127.0.0.1:5000
-
-Features:
-- Multiple users (each person registers their own account)
-- Add/edit/delete events with date, time, and notes
-- Dashboard highlights events that are due TODAY or coming up soon
-- Browser popup reminders (using the Notification API) while the page is open
 """
 
 import sqlite3
@@ -18,12 +12,11 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "adi-secret-key-change-this-later"  # change before real deployment
+app.secret_key = "adi-secret-key-change-this-later"
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "adi.db")
 
 
-# ---------- DATABASE SETUP ----------
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -53,7 +46,6 @@ def init_db():
     conn.close()
 
 
-# ---------- HELPERS ----------
 def current_user_id():
     return session.get("user_id")
 
@@ -67,7 +59,6 @@ def login_required(view_func):
     return wrapper
 
 
-# ---------- AUTH ROUTES ----------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -123,7 +114,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ---------- MAIN APP ROUTES ----------
 @app.route("/")
 def home():
     if current_user_id():
@@ -141,7 +131,7 @@ def dashboard():
     ).fetchall()
     conn.close()
 
-    events = [dict(row) for row in rows]  # convert sqlite3.Row -> plain dict (JSON-friendly)
+    events = [dict(row) for row in rows]
     today_str = date.today().isoformat()
 
     return render_template("dashboard.html", events=events, today=today_str, username=session.get("username"))
@@ -214,6 +204,7 @@ def delete_event(event_id):
     return redirect(url_for("dashboard"))
 
 
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
